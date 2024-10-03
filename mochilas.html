@@ -12,7 +12,9 @@
     <script type="text/javascript" src="js/BrowserPrint-3.1.250.min.js"></script>
     <script type="text/javascript">
         let printerState = {};
+        let messageError;
         function setup() {
+            messageError =document.getElementById("messageError");
             // Initializing Zebra printer
             window.BrowserPrint.getDefaultDevice("printer", function (device) {
                 console.log("BrowserPrint Init");
@@ -21,6 +23,8 @@
             }, function (error) {
                 printerState.error = error;
             })
+
+            messageError.innerHTML = JSON.stringify(printerState);
         }
 
         const sendToPrinter = () => {
@@ -33,10 +37,12 @@
 
             let _zpl = '';
             for (let x = 0; x < cantidad; x++) {
-                _zpl += `^XA^CF0,16^FO250,16^FDMarca:Thule^FS^FO64,40^FD${producto}^FS^FO64,64^FDModelo: ${modelo}^FS^FO64,88^FDComposicion: ${composicion}^FS^FO64,112^FDInstrucciones de cuidado: Limpiar con trapo humedo, secar a la sombra^FS^FO64,136^FDIMPORTADO POR: ICSITUM, S.A. DE C.V.^FS^FO64,160^FDDOMICILIO: Carretera Federal Mexico Toluca 5631, Int. 426, Col. Cuajimalpa,^FS^FO64,184^FDCuajimalpa de Morelos, C.P. 05000, Ciudad de Mexico, Mexico^FS^XZ`;
+                _zpl += `^XA^CF0,16^FO250,16^FDMarca:Thule^FS^FO128,40^FD${producto}^FS^FO128,64^FDModelo: ${modelo}^FS^FO128,88^FDComposicion: ${composicion}^FS^FO128,112^FDInstrucciones de cuidado: Limpiar con trapo humedo, secar a la sombra^FS^FO128,136^FDIMPORTADO POR: ICSITUM, S.A. DE C.V.^FS^FO128,160^FDDOMICILIO: Carretera Federal Mexico Toluca 5631, Int. 426, Col. Cuajimalpa,^FS^FO128,184^FDCuajimalpa de Morelos, C.P. 05000, Ciudad de Mexico, Mexico^FS^XZ`;
             }
 
             printerState.printer.send(_zpl, undefined, (error) => { printerState.error = `Error: ${error}` });
+            messageError.innerHTML = JSON.stringify(printerState);
+
         }
         //Application Configuration
         window.onload = setup;
