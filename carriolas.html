@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="js/BrowserPrint-3.1.250.min.js"></script>
+    <script type="text/javascript">
+        let printerState = {};
+        function setup() {
+            // Initializing Zebra printer
+            window.BrowserPrint.getDefaultDevice("printer", function (device) {
+                console.log("BrowserPrint Init");
+                printerState.printer = device;
+                printerState.printer.read((_) => { printerState.printerStatus = "Device Ready"; }, (error) => { printerState.printerStatus = error });
+            }, function (error) {
+                printerState.error = error;
+            })
+        }
+
+        const sendToPrinter = () => {
+            if(!confirm("¿Deseas mandar a imprimir?")) return;
+            console.log("Send to printer");
+            let producto = document.getElementById("producto").value;
+            let modelo = document.getElementById("modelo").value;
+            let composicion = document.getElementById("composicion").value;
+            let cantidad = document.getElementById("cantidad").value;
+
+            let _zpl = '';
+            for (let x = 0; x < cantidad; x++) {
+                _zpl += `^XA^CF0,16^FO64,16^FDMarca:Thule^FS^FO64,40^FDNombre: ${producto}^FS^FO64,64^FDModelo: ${modelo}^FS^FO64,88^FDContenido: 1 Pieza^FS^FO64,136^FDIMPORTADO POR: ICSITUM, S.A. DE C.V.^FS^FO64,160^FDDOMICILIO: Carretera Federal Mexico Toluca 5631, Int. 426, Col. Cuajimalpa,^FS^FO64,184^FDCuajimalpa de Morelos, C.P. 05000, Ciudad de Mexico, Mexico^FS^FO64,208^FDHECHO EN CHINA^FS^FO64,232^FDAdvertencias:^FS^FO64,256^FD-No deje al nino(a) solo(a) con este producto^FS^FO64,280^FD-Toda la instalacion debe realizarse por un adulto; si tiene dudas pongase^FS^FO64,304^FDen contacto con un experto^FS^FO64,328^FD-Conserve el instructivo para futuras consultas^FS^FO64,354^FDVEASE EL INSTRUCTIVO ANEXO^FS^FO64,378^FDcontacto@outdoorretail.mx^FS^XZ`;
+            }
+
+            printerState.printer.send(_zpl, undefined, (error) => { printerState.error = `Error: ${error}` });
+        }
+        
+        //Application Configuration
+        window.onload = setup;
+    </script>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="mt-2 col-8 offset-2">
+
+            <h1>Impresión de etiquetas para Carriolas</h1>
+            <p>Lorem Ipsum Dolor Sit Amet.</p>
+
+            <form>
+
+                <div class="form-group">
+                    <label for="producto">Producto</label>
+                    <input type="text" class="form-control" id="producto" aria-describedby="productoHelp"
+                        placeholder="Nombre del producto" />
+                    <small id="productoHelp" class="form-text text-muted">Ingresa el nombre del producto como saldra
+                        impreso.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="modelo">Modelo</label>
+                    <input type="text" class="form-control" id="modelo" placeholder="Modelo del producto" />
+                </div>
+
+                <div class="form-group">
+                    <label for="composicion">Composición</label>
+                    <input type="text" class="form-control" id="composicion" placeholder="Composición del producto" />
+                </div>
+
+                <div class="form-group">
+                    <label for="cantidad">Cantidad</label>
+                    <input type="number" class="form-control" id="cantidad" placeholder="Numero de etiquetas" />
+                </div>
+
+                <div class="mt-2 form-group">
+                    <button type="button" class="btn btn-primary form-control" onclick="sendToPrinter()">Imprimir</button>
+                </div>
+
+            </form>
+
+            <samp id="messageError">This text is meant to be treated as sample output from a computer program.</samp>
+        </div>
+
+</body>
+
+</html>

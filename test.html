@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta charset="UTF-8">
+
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="js/BrowserPrint-3.1.250.min.js"></script>
+    <script type="text/javascript">
+        var selected_device;
+        var devices = [];
+        function setup() {
+            //Get the default device from the application as a first step. Discovery takes longer to complete.
+            BrowserPrint.getDefaultDevice("printer", function (device) {
+
+                //Add device to list of devices and to html select element
+                selected_device = device;
+                devices.push(device);
+                var html_select = document.getElementById("selected_device");
+                var option = document.createElement("option");
+                option.text = device.name;
+                html_select.add(option);
+
+                //Discover any other devices available to the application
+                BrowserPrint.getLocalDevices(function (device_list) {
+                    for (var i = 0; i < device_list.length; i++) {
+                        //Add device to list of devices and to html select element
+                        var device = device_list[i];
+                        if (!selected_device || device.uid != selected_device.uid) {
+                            devices.push(device);
+                            var option = document.createElement("option");
+                            option.text = device.name;
+                            option.value = device.uid;
+                            html_select.add(option);
+                        }
+                    }
+
+                }, function () { alert("Error getting local devices") }, "printer");
+
+            }, function (error) {
+                alert(error);
+            })
+        }
+        //Application Configuration
+        function getConfig() {
+            BrowserPrint.getApplicationConfiguration(function (config) {
+                document.getElementById('app-configuration').textContent = JSON.stringify(config, null, 2);
+            }, function (error) {
+                alert(JSON.stringify(new BrowserPrint.ApplicationConfiguration()));
+            })
+        }
+        function writeToSelectedPrinter(dataToWrite) {
+            selected_device.send(dataToWrite, undefined, errorCallback);
+        }
+        var readCallback = function (readData) {
+            if (readData === undefined || readData === null || readData === "") {
+                document.getElementById('app-configuration').textContent = "Device Ready";
+                // alert("No Response from Device");
+            }
+            else {
+                document.getElementById('app-configuration').textContent = readData;
+                // alert(readData);
+            }
+        }
+        var errorCallback = function (errorMessage) {
+            document.getElementById('app-configuration').textContent = errorMessage;
+        }
+        function readFromSelectedPrinter() {
+
+            selected_device.read(readCallback, errorCallback);
+
+        }
+        function getDeviceCallback(deviceList) {
+            document.getElementById('app-configuration').textContent = JSON.stringify(deviceList, null, 2);
+            // alert("Devices: \n" + JSON.stringify(deviceList, null, 2))
+        }
+
+        function sendImage(imageUrl) {
+            url = window.location.href.substring(0, window.location.href.lastIndexOf("/"));
+            url = url + "/images/" + imageUrl;
+            selected_device.convertAndSendFile(url, undefined, errorCallback)
+        }
+        function sendFile(fileUrl) {
+            url = window.location.href.substring(0, window.location.href.lastIndexOf("/"));
+            url = url + "/" + fileUrl;
+            selected_device.sendFile(url, undefined, errorCallback)
+        }
+        function onDeviceSelected(selected) {
+            for (var i = 0; i < devices.length; ++i) {
+                if (selected.value == devices[i].uid) {
+                    selected_device = devices[i];
+                    return;
+                }
+            }
+        }
+        window.onload = setup;
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Zebra Browser Print Reboot Project Test</h1>
+        <p>Catalogo de etiquetas probadas por nosotros.</p>
+        <div class="row">
+            <div class="col">
+                <label for="selected_device">Printer</label>
+                <select id="selected_device" class="form-select" onchange=onDeviceSelected(this);></select>
+            </div>
+        </div>
+
+        <div class="mt-2">
+            <p>Zebra Configuration Output:</p>
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="button" class="btn btn-primary" onclick="getConfig()">Show Application
+                    Configuration</button>
+                <button type="button" class="btn btn-secondary"
+                    onclick="writeToSelectedPrinter('~hs'); readFromSelectedPrinter()">Get Status</button>
+                <button type="button" class="btn btn-success"
+                    onclick="BrowserPrint.getLocalDevices(getDeviceCallback, errorCallback);">Get Local Devices</button>
+                <button type="button" class="btn btn-danger" onclick="readFromSelectedPrinter()">Read Selected
+                    Printer</button>
+            </div>
+            <pre class="code"><code id="app-configuration"></code></pre>
+        </div>
+
+        <div class="mt-2">
+            <p>Print test labels:</p>
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="button" class="btn btn-primary" onclick="writeToSelectedPrinter('~wc')">Print
+                    Configuration Label</button>
+                <button type="button" class="btn btn-secondary"
+                    onclick="writeToSelectedPrinter('^XA^FO0,0^A0N36,36^FD¡Hello World!^FS^XZ')">Print ZPL "¡Hello
+                    World!"</button>
+                <button type="button" class="btn btn-success" onclick="sendImage('reboot-logo-b.jpg');">Print Image
+                    PNG</button>
+            </div>
+        </div>
+
+        <div class="mt-2">
+            <p>Example code of ribbon 1 x 1/2 in, 3 in row labels (Sku + Price):</p>
+            <pre class="code"><code>^XA
+^CFA,18^FO90,30^FDBRLB2^FS
+^CFA,24^FO75,65^FD1,850.00^FS
+^CFA,18^FO330,30^FD27301404^FS
+^CFA,24^FO320,65^FD5,950.00^FS
+^CFA,18^FO570,30^FD206007^FS
+^CFA,24^FO565,65^FD2,890.00^FS
+^XZ</code></pre>
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="button" class="btn btn-primary" onclick="sendFile('three_columns.zpl');">Send to
+                    printer</button>
+                <a class="btn btn-secondary" href="three_columns.zpl">Download ZPL</a>
+            </div>
+        </div>
+
+        <div class="mt-2">
+            <p>Example code of ribbon 4 x 4 in, 1 in row labels:</p>
+            <pre class="code"><code>^XA
+^FO256,128^GFA,4600,4600,40,gS038,gS03C,::::::::::::::::::::gS03CgS078,:::::X01FER03C07F8N03FCO0FFM078,N0600FFCJ0IFCQ03C7IFM01IF8M07FFCL078,N0703FFCI03JFQ03DJFCL07IFEL01JFL078,N070IFCI07F03F8P03LFL0KFL03JFCK078,N079FC1C001F800FCL0CI03FE007F8J01F801F8K0FE00FEK078,N079EK03EI03EL0CI03FI01FCJ03EI07CJ01F8001FK078,N07F8K03CI01FL08I03CJ07CJ07CI03EJ03EJ0F8J078,N07FL078J0F8J018I03CJ03EJ0F8I01FJ03CJ07C003KFC,N07EL0FK078J018I03CJ01FI01FK0F8I078J03C003KFC,I01J07CL0EK078J018I03CK0FI01EK078I0F8J01E001KFCI08,I07J078K01EK03CJ01J03CK0F8003CK03CI0FK01EJ078L0E,I0EJ078K01EK03CJ03J03CK078003CK03C001FL0FJ078L07,003CJ078K01CK01CJ03J03CK078003CK01E001EL0FJ078L03C,00FK078K03CK01EJ02J03CK0780078K01E001EL078I078M0F,01EK078K03CK01EJ06J03CK03C0078K01E001EL078I078M078,078K078K03CK01EJ06J03CK03C0078K01E003CL078I078M01E,0EL078K03MFEJ04J03CK03C0078L0E003CL078I078N07,3CL078K03MFEJ0CJ03CK03C007M0E003CL078I078N03C7M078K03MFEJ0CJ03CK03C007M0E003CL078I078O0E78L078K03CQ0CJ03CK03C007M0E003CL078I078N01E1CL078K03CQ08J03CK03C0078L0E003CL078I078N0380FL078K03CP018J03CK03C0078K01E003CL078I078N0F,03CK078K03CP018J03CK03C0078K01E001CL078I078M03C,00FK078K03CP01K03CK0780078K01E001EL078I078M0F,0078J078K03CP03K03CK0780078K01E001EL0FJ078L01E,001EJ078K01EP03K03CK078003CK03C001EL0FJ078L078,I07J078K01EP02K03CK0FI03CK03CI0FK01FJ078L0E,I03J078L0FP02K03CK0FI01EK078I0F8J01EJ078L0C,N078L0F8O06K03EJ01EI01FK0F8I078J03EJ078,N078L07CO06K03FJ03EJ0FK0FJ07CJ07CJ078,N078L07EO04K03F8I03CJ078I01EJ03EJ0F8J078,N078L03FJ06J0CK03FCI0F8J07EI07EJ01FI01FK078,N078L01FC001FJ0CK039E001F8J03FI0FCK0FC007EK078,N078M0FF00FFP038FC07FL0FE07F8K07F83FCK078,N078M07JFCP0383IFCL07IFEL01JF8K078,N078M01JFQ0381IF8L01IFCM0IFEL078,N078N03FF8T07FEN07FEN01FF8L078,iN07C00C,iN03E07C,iN03IFE,iN03IFC,iN01FFE,iO07F,,:::::::::::::::gY01,,::hO02,::gO03C003807801003C00700FE,gO0C200C0084010082018402,gO081008010201K02I02,gO081L0101010102I02,gO08K020101010102I02,gO0808I02010101I02I02,gO08K02010101I02I02,gO081J01010101I02I02,gO081J010201008001I02,gO0C6K0C40100C2008C022,gO098K030010018002I08,gO08O01,:::::gO08O02,gX01C,,:^FS
+^CFA,24^FO128,320^FDSuscribete a nuestro newsletter^FS
+^FO260,420^BQN,2,10,M,7^FDQA,www.rebootproject.mx/newsletter^FS
+^XZ</code></pre>
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="button" class="btn btn-primary" onclick="sendFile('newsletter.zpl');">Send to
+                    printer</button>
+                <a class="btn btn-secondary" href="newsletter.zpl">Download ZPL</a>
+            </div>
+        </div>
+
+
+        <input type="text" name="write_text" id="write_text"><input type="button" value="Write"
+            onclick="writeToSelectedPrinter(document.getElementById('write_text').value)"><br /><br />
+    </div>
+
+</body>
+
+</html>

@@ -1,4 +1,4 @@
-# ZPL Test V 0.0.2
+# ZPL Test V 0.0.4
 
 Como imprimir desde terminal MAC
 
