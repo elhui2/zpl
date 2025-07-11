@@ -24,21 +24,22 @@
         }
 
         const sendToPrinter = () => {
-            if(!confirm("¿Deseas mandar a imprimir?")) return;
+            if (!confirm("¿Deseas mandar a imprimir?")) return;
             console.log("Send to printer");
             let producto = document.getElementById("producto").value;
             let modelo = document.getElementById("modelo").value;
             let composicion = document.getElementById("composicion").value;
+            let country = document.getElementById("country").value;
             let cantidad = document.getElementById("cantidad").value;
 
             let _zpl = '';
             for (let x = 0; x < cantidad; x++) {
-                _zpl += `^XA^CF0,16^FO128,16^FDMarca:Thule^FS^FO128,40^FDNombre: ${producto}^FS^FO128,64^FDModelo: ${modelo}^FS^FO128,88^FDContenido: 1 Pieza^FS^FO128,136^FDIMPORTADO POR: ICSITUM, S.A. DE C.V.^FS^FO128,160^FDDOMICILIO: Carretera Federal Mexico Toluca 5631, Int. 426, Col. Cuajimalpa,^FS^FO128,184^FDCuajimalpa de Morelos, C.P. 05000, Ciudad de Mexico, Mexico^FS^FO128,208^FDHECHO EN CHINA^FS^FO128,232^FDAdvertencias:^FS^FO128,256^FD-No deje al nino(a) solo(a) con este producto^FS^FO128,280^FD-Toda la instalacion debe realizarse por un adulto; si tiene dudas pongase^FS^FO128,304^FDen contacto con un experto^FS^FO128,328^FD-Conserve el instructivo para futuras consultas^FS^FO128,354^FDVEASE EL INSTRUCTIVO ANEXO^FS^FO128,378^FDcontacto@outdoorretail.mx^FS^XZ`;
+                _zpl += `^XA^CF0,16^FO128,16^FDMarca:Thule^FS^FO128,40^FDNombre: ${producto}^FS^FO128,64^FDModelo: ${modelo}^FS^FO128,88^FDContenido: 1 Pieza^FS^FO128,136^FDIMPORTADO POR: ICSITUM, S.A. DE C.V.^FS^FO128,160^FDDOMICILIO: Carretera Federal Mexico Toluca 5631, Int. 426, Col. Cuajimalpa,^FS^FO128,184^FDCuajimalpa de Morelos, C.P. 05000, Ciudad de Mexico, Mexico^FS^FO128,208^FDHECHO EN ${country}^FS^FO128,232^FDAdvertencias:^FS^FO128,256^FD-No deje al nino(a) solo(a) con este producto^FS^FO128,280^FD-Toda la instalacion debe realizarse por un adulto; si tiene dudas pongase^FS^FO128,304^FDen contacto con un experto^FS^FO128,328^FD-Conserve el instructivo para futuras consultas^FS^FO128,354^FDVEASE EL INSTRUCTIVO ANEXO^FS^FO128,378^FDcontacto@outdoorretail.mx^FS^XZ`;
             }
 
             printerState.printer.send(_zpl, undefined, (error) => { printerState.error = `Error: ${error}` });
         }
-        
+
         //Application Configuration
         window.onload = setup;
     </script>
@@ -73,12 +74,23 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="composicion">País de Fabricación</label>
+                    <select class="form-select" id="country">
+                        <option value="CHINA">China</option>
+                        <option value="INDONESIA">Indonesia</option>
+                        <option value="POLONIA">Polonia</option>
+                        <option value="VIETNAM">Vietnam</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="cantidad">Cantidad</label>
                     <input type="number" class="form-control" id="cantidad" placeholder="Numero de etiquetas" />
                 </div>
 
                 <div class="mt-2 form-group">
-                    <button type="button" class="btn btn-primary form-control" onclick="sendToPrinter()">Imprimir</button>
+                    <button type="button" class="btn btn-primary form-control"
+                        onclick="sendToPrinter()">Imprimir</button>
                 </div>
 
             </form>
